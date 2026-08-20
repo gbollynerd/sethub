@@ -33,10 +33,11 @@ export default function LandingPage() {
         <div className="mx-auto flex max-w-[76rem] items-center justify-between px-5 py-4 sm:px-8">
           <Logo href="/" />
           <nav className="hidden items-center gap-7 text-sm font-medium text-[var(--color-muted)] md:flex">
-            <a href="#pillars" className="transition hover:text-[var(--color-ink)]">Product</a>
-            <a href="#departments" className="transition hover:text-[var(--color-ink)]">Departments</a>
-            <a href="#money" className="transition hover:text-[var(--color-ink)]">Finances</a>
-            <a href="#how" className="transition hover:text-[var(--color-ink)]">How it works</a>
+            <Link href="/why-sethub" className="transition hover:text-[var(--color-ink)]">Why SetHub</Link>
+            <Link href="/who-is-sethub-for" className="transition hover:text-[var(--color-ink)]">Who it&apos;s for</Link>
+            <Link href="/about" className="transition hover:text-[var(--color-ink)]">About</Link>
+            <Link href="/faqs" className="transition hover:text-[var(--color-ink)]">FAQs</Link>
+            <Link href="/talk-to-sales" className="transition hover:text-[var(--color-ink)]">Talk to sales</Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link href="/login" className="btn btn-quiet hidden sm:inline-flex">Sign in</Link>
@@ -332,9 +333,13 @@ export default function LandingPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-[var(--color-muted)]">
+            <Link href="/why-sethub" className="hover:text-[var(--color-ink)]">Why SetHub</Link>
+            <Link href="/who-is-sethub-for" className="hover:text-[var(--color-ink)]">Who it&apos;s for</Link>
+            <Link href="/about" className="hover:text-[var(--color-ink)]">About</Link>
+            <Link href="/faqs" className="hover:text-[var(--color-ink)]">FAQs</Link>
+            <Link href="/talk-to-sales" className="hover:text-[var(--color-ink)]">Talk to sales</Link>
             <Link href="/login" className="hover:text-[var(--color-ink)]">Sign in</Link>
             <Link href="/signup" className="hover:text-[var(--color-ink)]">Create account</Link>
-            <a href="#pillars" className="hover:text-[var(--color-ink)]">Product</a>
             <span className="text-[var(--color-subtle)]">© {new Date().getFullYear()} SetHub</span>
           </div>
         </div>

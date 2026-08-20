@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ICONS, IconChevronDown, IconClose, IconMenu } from "@/components/icons";
 import { WorkspaceSwitcher } from "@/components/shell/workspace-switcher";
 import { navigation } from "@/lib/nav";
 import type { Community, SetDepartment } from "@/lib/types";
-import { Logo } from "@/components/brand";
+import { Logo, LogoMark } from "@/components/brand";
 
 interface Props {
   setId: string;
@@ -20,6 +20,19 @@ interface Props {
 
 export function Sidebar(props: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem("sethub-sidebar-collapsed") === "true");
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((value) => {
+      const next = !value;
+      window.localStorage.setItem("sethub-sidebar-collapsed", String(next));
+      return next;
+    });
+  }
 
   return (
     <>
@@ -61,11 +74,26 @@ export function Sidebar(props: Props) {
       ) : null}
 
       {/* Desktop rail */}
-      <aside className="sticky top-0 hidden h-dvh w-[17.5rem] shrink-0 flex-col border-r border-[var(--color-line)] bg-[var(--color-canvas-2)] lg:flex">
-        <div className="px-4 pb-1 pt-5">
-          <Logo />
+      <aside
+        data-collapsed={collapsed}
+        className="sticky top-0 hidden h-dvh w-[17.5rem] shrink-0 flex-col border-r border-[var(--color-line)] bg-[var(--color-canvas-2)] transition-[width] duration-300 ease-out data-[collapsed=true]:w-[5.4rem] lg:flex"
+      >
+        <div
+          className="flex items-center justify-between gap-2 px-4 pb-1 pt-5 data-[collapsed=true]:justify-center"
+          data-collapsed={collapsed}
+        >
+          {collapsed ? <LogoMark size={32} /> : <Logo />}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            className="btn btn-quiet btn-icon shrink-0"
+            aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+            title={collapsed ? "Expand navigation" : "Collapse navigation"}
+          >
+            <IconMenu size={18} />
+          </button>
         </div>
-        <SidebarBody {...props} />
+        <SidebarBody {...props} collapsed={collapsed} />
       </aside>
     </>
   );
@@ -79,28 +107,33 @@ function SidebarBody({
   counts,
   canAdminister,
   onNavigate,
-}: Props & { onNavigate?: () => void }) {
+  collapsed = false,
+}: Props & { onNavigate?: () => void; collapsed?: boolean }) {
   const pathname = usePathname();
   const sections = navigation(setId);
 
   return (
     <div className="scroll-slim flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pb-6 pt-3">
-      <WorkspaceSwitcher
-        communities={communities}
-        activeSetId={setId}
-        departments={departments}
-        activeDepartmentId={activeDepartmentId}
-      />
+      {!collapsed ? (
+        <WorkspaceSwitcher
+          communities={communities}
+          activeSetId={setId}
+          departments={departments}
+          activeDepartmentId={activeDepartmentId}
+        />
+      ) : null}
 
       <nav className="flex flex-col gap-5">
         {sections.map((section, si) => {
           if (section.title === "Administration" && !canAdminister) return null;
           return (
             <div key={section.title ?? si}>
-              {section.title ? (
+              {section.title && !collapsed ? (
                 <p className="mb-1.5 px-2 text-[0.68rem] font-bold uppercase tracking-[0.13em] text-[var(--color-subtle)]">
                   {section.title}
                 </p>
+              ) : collapsed && section.title ? (
+                <div className="mx-auto my-2 h-px w-8 bg-[var(--color-line)]" aria-hidden="true" />
               ) : null}
               <ul className="space-y-0.5">
                 {section.items.map((item) => {
@@ -125,6 +158,7 @@ function SidebarBody({
                         childrenLinks={item.children}
                         pathname={pathname}
                         onNavigate={onNavigate}
+                        collapsed={collapsed}
                       />
                     </li>
                   );
@@ -135,19 +169,21 @@ function SidebarBody({
         })}
       </nav>
 
-      <div className="mt-auto rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--color-brand-deep)] to-[var(--color-brand)] p-4 text-white">
-        <p className="font-display text-sm font-semibold">Bring the whole set in</p>
-        <p className="mt-1 text-xs leading-relaxed text-white/80">
-          Share an invite link on WhatsApp and your classmates land straight in this community.
-        </p>
-        <Link
-          href={`/s/${setId}/admin/invites`}
-          onClick={onNavigate}
-          className="btn btn-sm mt-3 w-full bg-white text-[var(--color-brand-deep)] hover:bg-white/90"
-        >
-          Create invite link
-        </Link>
-      </div>
+      {!collapsed ? (
+        <div className="mt-auto rounded-[var(--radius-lg)] bg-gradient-to-br from-[var(--color-brand-deep)] to-[var(--color-brand)] p-4 text-white">
+          <p className="font-display text-sm font-semibold">Bring the whole set in</p>
+          <p className="mt-1 text-xs leading-relaxed text-white/80">
+            Share an invite link on WhatsApp and your classmates land straight in this community.
+          </p>
+          <Link
+            href={`/s/${setId}/admin/invites`}
+            onClick={onNavigate}
+            className="btn btn-sm mt-3 w-full bg-white text-[var(--color-brand-deep)] hover:bg-white/90"
+          >
+            Create invite link
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -161,6 +197,7 @@ function NavRow({
   childrenLinks,
   pathname,
   onNavigate,
+  collapsed = false,
 }: {
   href: string;
   label: string;
@@ -170,6 +207,7 @@ function NavRow({
   childrenLinks?: Array<{ label: string; href: string }>;
   pathname: string;
   onNavigate?: () => void;
+  collapsed?: boolean;
 }) {
   const [expanded, setExpanded] = useState(active);
 
@@ -180,17 +218,18 @@ function NavRow({
           href={href}
           onClick={onNavigate}
           data-active={active}
-          className="nav-item min-w-0 flex-1"
+          className={`nav-item min-w-0 flex-1 ${collapsed ? "justify-center px-0" : ""}`}
+          title={collapsed ? label : undefined}
         >
           {icon}
-          <span className="min-w-0 flex-1 truncate">{label}</span>
-          {badge > 0 ? (
+          {!collapsed ? <span className="min-w-0 flex-1 truncate">{label}</span> : null}
+          {badge > 0 && !collapsed ? (
             <span className="tabular grid h-5 min-w-5 shrink-0 place-items-center rounded-full bg-[var(--color-brand)] px-1.5 text-[0.66rem] font-bold text-white">
               {badge > 99 ? "99+" : badge}
             </span>
           ) : null}
         </Link>
-        {childrenLinks?.length ? (
+        {childrenLinks?.length && !collapsed ? (
           <button
             type="button"
             aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
@@ -202,7 +241,7 @@ function NavRow({
         ) : null}
       </div>
 
-      {childrenLinks?.length && expanded ? (
+      {childrenLinks?.length && expanded && !collapsed ? (
         <ul className="ml-[1.65rem] mt-0.5 space-y-0.5 border-l border-[var(--color-line)] pl-3">
           {childrenLinks.map((c) => (
             <li key={c.href}>

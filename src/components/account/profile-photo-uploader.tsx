@@ -3,29 +3,35 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Avatar } from "@/components/ui";
+import { Avatar, Badge } from "@/components/ui";
 
 type Props = {
   userId: string;
   name?: string | null;
   currentUrl?: string | null;
+  displayName: string;
+  email: string;
+  communityLabel: string;
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const OUTPUT_SIZE = 512;
 const PREVIEW_SIZE = 256;
 
-export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
+export function ProfilePhotoUploader({ userId, name, currentUrl, displayName, email, communityLabel }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(currentUrl ?? null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState<{ x: number; y: number; ox: number; oy: number } | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => setAvatarUrl(currentUrl ?? null), [currentUrl]);
 
   useEffect(() => {
     if (!previewUrl) return;
@@ -45,13 +51,16 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
 
   function selectFile(file?: File) {
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setStatus("Choose a PNG, JPG, WebP, or GIF image.");
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setStatus("Choose a JPG, PNG, or WebP image.");
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setStatus("Choose an image smaller than 5 MB.");
       return;
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setStatus(null);
-    setUploadedUrl(null);
     setPreviewUrl(URL.createObjectURL(file));
   }
 
@@ -95,15 +104,11 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-      const publicUrl = data.publicUrl;
-      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
-      if (updateError) throw updateError;
-
-      setUploadedUrl(publicUrl);
       const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
       const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
       if (updateError) throw updateError;
 
+      setAvatarUrl(publicUrl);
       setStatus("Profile photo updated.");
       setPreviewUrl(null);
       imageRef.current = null;
@@ -116,31 +121,30 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
   }
 
   const transform = `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`;
+  const visibleAvatarUrl = previewUrl ?? avatarUrl;
 
   return (
-    <div className="space-y-4">
-      <div>
+    <div className="space-y-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <Avatar name={name} src={visibleAvatarUrl} size={80} />
+        <div className="min-w-0 flex-1">
+          <p className="font-display text-lg font-semibold leading-tight text-[var(--color-ink)]">{displayName}</p>
+          <p className="mt-1 break-words text-sm text-[var(--color-muted)]">{email}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            <Badge>{communityLabel}</Badge>
+          </div>
+        </div>
+        <button type="button" className="btn btn-ghost btn-sm self-start sm:self-center" onClick={() => fileInputRef.current?.click()}>
+          Change photo
+        </button>
+      </div>
+
+      <div className="border-t border-[var(--color-line)] pt-5">
         <p className="font-display text-base font-semibold text-[var(--color-ink)]">Profile photo</p>
         <p className="mt-1 text-sm text-[var(--color-muted)]">Update your photo so other members can recognize you.</p>
-      </div>
-      <div className="flex flex-wrap items-center gap-4">
-        <Avatar name={name} src={previewUrl ?? uploadedUrl ?? currentUrl} size={80} />
-        <div>
-          <input ref={fileInputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => selectFile(e.target.files?.[0])} />
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()}>
-            Choose photo
-          </button>
-          <p className="mt-1 text-xs text-[var(--color-subtle)]">JPG, PNG or WebP · Max 5 MB</p>
-          <p className="text-xs text-[var(--color-subtle)]">Your photo will be cropped to a square.</p>
-      <div className="flex flex-wrap items-center gap-4">
-        <Avatar name={name} src={previewUrl ?? currentUrl} size={80} />
-        <div>
-          <input ref={fileInputRef} className="sr-only" type="file" accept="image/*" onChange={(e) => selectFile(e.target.files?.[0])} />
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()}>
-            Choose photo
-          </button>
-          <p className="mt-1 text-xs text-[var(--color-subtle)]">Crop and zoom before saving. Uploaded photos are stored as square WebP images.</p>
-        </div>
+        <input ref={fileInputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => selectFile(e.target.files?.[0])} />
+        <p className="mt-3 text-xs font-semibold text-[var(--color-subtle)]">JPG, PNG or WebP · Max 5 MB</p>
+        <p className="text-xs text-[var(--color-subtle)]">Your photo will be cropped to a square.</p>
       </div>
 
       {previewUrl ? (

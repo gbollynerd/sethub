@@ -64,7 +64,17 @@ export default async function AdminMembersPage({
     if (["removed", "rejected"].includes(next) && !can(workspace, "members.remove")) return;
     if (next === "suspended" && !can(workspace, "members.suspend")) return;
 
-    await supabase
+    const { data: target } = await supabase
+      .from("set_memberships")
+      .select("user_id")
+      .eq("id", membershipId)
+      .eq("set_id", setId)
+      .maybeSingle();
+
+    if (!target) return;
+    if (["removed", "rejected", "suspended"].includes(next) && target.user_id === workspace.userId) return;
+
+    const { error } = await supabase
       .from("set_memberships")
       .update({
         status: next,
@@ -73,6 +83,8 @@ export default async function AdminMembersPage({
       })
       .eq("id", membershipId)
       .eq("set_id", setId);
+
+    if (error) return;
 
     await supabase.rpc("log_audit", {
       p_set: setId,
@@ -97,6 +109,7 @@ export default async function AdminMembersPage({
       const dept = first(m.set_departments) as { name: string } | null;
       return {
         id: m.id as string,
+        userId: m.user_id as string,
         status: m.status as string,
         name: p?.display_name ?? "Member",
         avatar: p?.avatar_url ?? null,
@@ -226,7 +239,7 @@ export default async function AdminMembersPage({
                       </form>
                     </>
                   ) : null}
-                  {r.status === "active" && canRemove ? (
+                  {r.status === "active" && canRemove && r.userId !== ws.userId ? (
                     <form action={updateStatus}>
                       <input type="hidden" name="membership_id" value={r.id} />
                       <input type="hidden" name="next" value="suspended" />

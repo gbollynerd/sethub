@@ -41,7 +41,7 @@ export default async function AdminMembersPage({
 
   if (status !== "all") query = query.eq("status", status);
 
-  const [{ data: members }, counts] = await Promise.all([
+  const [{ data: members, error: membersError }, counts] = await Promise.all([
     query,
     Promise.all([
       supabase.from("set_memberships").select("id", { count: "exact", head: true }).eq("set_id", setId).eq("status", "active"),
@@ -51,6 +51,11 @@ export default async function AdminMembersPage({
   ]);
 
   const [activeCount, pendingCount, suspendedCount] = counts.map((c) => c.count ?? 0);
+
+  if (membersError) {
+    console.error("[admin/members] query error", JSON.stringify(membersError));
+  }
+  console.log("[admin/members] rows returned", members?.length ?? "null", "status filter", status);
 
   async function updateStatus(formData: FormData) {
     "use server";

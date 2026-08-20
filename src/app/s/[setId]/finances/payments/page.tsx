@@ -24,7 +24,7 @@ export default async function PaymentsPage({
   let query = supabase
     .from("payments")
     .select(
-      "id, amount, currency, method, status, paid_at, reference, note, payer_name, is_anonymous, set_memberships ( id, profiles ( display_name, avatar_url ) ), dues ( title )",
+      "id, amount, currency, method, status, paid_at, reference, note, payer_name, is_anonymous, set_memberships ( id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) ), dues ( title )",
     )
     .eq("set_id", setId)
     .order("paid_at", { ascending: false })

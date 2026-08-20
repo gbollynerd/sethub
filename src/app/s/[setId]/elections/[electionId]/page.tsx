@@ -37,7 +37,7 @@ export default async function ElectionPage({
       .select(
         `id, title, description, seats, sort_order,
          election_candidates ( id, membership_id, manifesto, statement, photo_url, status, vote_count,
-           set_memberships ( id, nickname, course, profiles ( display_name, avatar_url ) ) )`,
+           set_memberships ( id, nickname, course, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) ) )`,
       )
       .eq("election_id", electionId)
       .order("sort_order"),

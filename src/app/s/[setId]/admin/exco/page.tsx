@@ -19,7 +19,7 @@ export default async function ExcoPage({ params }: { params: Promise<{ setId: st
     supabase
       .from("exco_appointments")
       .select(
-        "id, status, term_id, created_at, exco_positions ( name, rank ), set_memberships ( id, nickname, profiles ( display_name, avatar_url ) )",
+        "id, status, term_id, created_at, exco_positions ( name, rank ), set_memberships ( id, nickname, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )",
       )
       .order("created_at", { ascending: false })
       .limit(200),

@@ -24,7 +24,7 @@ export default async function MemberProfilePage({
       `id, user_id, nickname, school_name_used, student_id, course, class_arm, admission_year,
        graduation_year, was_prefect, prefect_position, prefect_year, hostel_room, clubs, fun_fact,
        joined_at, is_founder, verification, status,
-       profiles ( id, display_name, avatar_url, bio, profession, employer, employment, city, state,
+       profiles!set_memberships_user_id_fkey ( id, display_name, avatar_url, bio, profession, employer, employment, city, state,
                   country, linkedin_url, x_url, instagram_url, website_url ),
        set_departments ( id, name, color ),
        institution_houses ( id, name, color ),

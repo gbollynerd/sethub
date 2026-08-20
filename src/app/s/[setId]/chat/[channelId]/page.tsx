@@ -39,7 +39,7 @@ export default async function ChannelPage({
     supabase
       .from("messages")
       .select(
-        "id, body, created_at, edited_at, is_pinned, reaction_count, author_id, membership_id, kind, profiles ( display_name, avatar_url )",
+        "id, body, created_at, edited_at, is_pinned, reaction_count, author_id, membership_id, kind, profiles!messages_author_id_fkey ( display_name, avatar_url )",
       )
       .eq("channel_id", channelId)
       .is("deleted_at", null)
@@ -47,7 +47,7 @@ export default async function ChannelPage({
       .limit(200),
     supabase
       .from("channel_members")
-      .select("membership_id, set_memberships ( id, profiles ( display_name, avatar_url ) )")
+      .select("membership_id, set_memberships ( id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )")
       .eq("channel_id", channelId)
       .limit(150),
     supabase

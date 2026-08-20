@@ -22,7 +22,7 @@ export default async function BusinessesPage({
   // Businesses are global to a person; discovery is scoped to this set's members.
   const { data: members } = await supabase
     .from("set_memberships")
-    .select("user_id, id, profiles ( display_name, avatar_url )")
+    .select("user_id, id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url )")
     .eq("set_id", setId)
     .eq("status", "active");
 

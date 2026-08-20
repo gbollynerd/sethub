@@ -23,7 +23,7 @@ export default async function QuizzesPage({ params }: { params: Promise<{ setId:
       .limit(20),
     supabase
       .from("quiz_attempts")
-      .select("id, score, max_score, submitted_at, quizzes!inner ( set_id, title ), set_memberships ( id, profiles ( display_name, avatar_url ) )")
+      .select("id, score, max_score, submitted_at, quizzes!inner ( set_id, title ), set_memberships ( id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )")
       .eq("quizzes.set_id", setId)
       .not("submitted_at", "is", null)
       .order("score", { ascending: false })

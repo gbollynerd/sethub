@@ -25,7 +25,7 @@ export default async function RolesPage({ params }: { params: Promise<{ setId: s
     supabase.from("permissions").select("key, category, label, dept_scoped, sort_order").order("sort_order"),
     supabase
       .from("member_roles")
-      .select("id, role_id, status, set_memberships ( id, profiles ( display_name, avatar_url ) )")
+      .select("id, role_id, status, set_memberships ( id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )")
       .eq("status", "accepted")
       .limit(400),
   ]);

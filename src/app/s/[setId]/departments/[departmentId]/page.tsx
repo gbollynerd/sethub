@@ -53,13 +53,13 @@ export default async function DepartmentOverviewPage({
       .limit(3),
     supabase
       .from("department_memberships")
-      .select("id, role, set_memberships ( id, nickname, course, profiles ( display_name, avatar_url ) )")
+      .select("id, role, set_memberships ( id, nickname, course, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )")
       .eq("department_id", departmentId)
       .eq("status", "active")
       .limit(12),
     supabase
       .from("department_memberships")
-      .select("id, role, set_memberships ( id, profiles ( display_name, avatar_url ) )")
+      .select("id, role, set_memberships ( id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )")
       .eq("department_id", departmentId)
       .in("role", ["admin", "coordinator"])
       .eq("status", "active"),

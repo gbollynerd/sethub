@@ -34,7 +34,7 @@ export default async function PeoplePage({
     .select(
       `id, user_id, nickname, course, class_arm, was_prefect, prefect_position, joined_at,
        is_founder, verification, department_id, house_id, hostel_id,
-       profiles!inner ( id, display_name, avatar_url, profession, employment, city, state ),
+       profiles!set_memberships_user_id_fkey!inner ( id, display_name, avatar_url, profession, employment, city, state ),
        set_departments ( id, name, color ),
        institution_houses ( id, name, color ),
        institution_hostels ( id, name )`,

@@ -37,7 +37,7 @@ export default async function EventPage({
   const [{ data: rsvps }, { data: mine }] = await Promise.all([
     supabase
       .from("event_rsvps")
-      .select("id, status, guests, membership_id, set_memberships ( id, profiles ( display_name, avatar_url ) )")
+      .select("id, status, guests, membership_id, set_memberships ( id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )")
       .eq("event_id", eventId)
       .in("status", ["going", "maybe", "attended"])
       .limit(60),

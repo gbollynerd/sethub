@@ -33,7 +33,7 @@ export default async function AdminMembersPage({
     .from("set_memberships")
     .select(
       `id, user_id, status, nickname, course, class_arm, student_id, joined_at, verification, is_founder,
-       department_id, profiles!left ( display_name, avatar_url, email, phone ), set_departments!left ( name )`,
+       department_id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url, email, phone ), set_departments ( name )`,
     )
     .eq("set_id", setId)
     .order("joined_at", { ascending: false })
@@ -41,7 +41,7 @@ export default async function AdminMembersPage({
 
   if (status !== "all") query = query.eq("status", status);
 
-  const [{ data: members, error: membersError }, counts] = await Promise.all([
+  const [{ data: members }, counts] = await Promise.all([
     query,
     Promise.all([
       supabase.from("set_memberships").select("id", { count: "exact", head: true }).eq("set_id", setId).eq("status", "active"),
@@ -51,11 +51,6 @@ export default async function AdminMembersPage({
   ]);
 
   const [activeCount, pendingCount, suspendedCount] = counts.map((c) => c.count ?? 0);
-
-  if (membersError) {
-    console.error("[admin/members] query error", JSON.stringify(membersError));
-  }
-  console.log("[admin/members] rows returned", members?.length ?? "null", "status filter", status);
 
   async function updateStatus(formData: FormData) {
     "use server";

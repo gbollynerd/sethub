@@ -28,6 +28,16 @@ const PRIVACY = [
   { value: "private", label: "Only me" },
 ];
 
+const COUNTRY_CODES = [
+  "AF", "AL", "DZ", "AD", "AO", "AG", "AR", "AM", "AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BT", "BO", "BA", "BW", "BR", "BN", "BG", "BF", "BI", "CV", "KH", "CM", "CA", "CF", "TD", "CL", "CN", "CO", "KM", "CG", "CD", "CR", "CI", "HR", "CU", "CY", "CZ", "DK", "DJ", "DM", "DO", "EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FJ", "FI", "FR", "GA", "GM", "GE", "DE", "GH", "GR", "GD", "GT", "GN", "GW", "GY", "HT", "HN", "HU", "IS", "IN", "ID", "IR", "IQ", "IE", "IL", "IT", "JM", "JP", "JO", "KZ", "KE", "KI", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI", "LT", "LU", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MR", "MU", "MX", "FM", "MD", "MC", "MN", "ME", "MA", "MZ", "MM", "NA", "NR", "NP", "NL", "NZ", "NI", "NE", "NG", "KP", "MK", "NO", "OM", "PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH", "PL", "PT", "QA", "RO", "RU", "RW", "KN", "LC", "VC", "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SK", "SI", "SB", "SO", "ZA", "KR", "SS", "ES", "LK", "SD", "SR", "SE", "CH", "SY", "TW", "TJ", "TZ", "TH", "TL", "TG", "TO", "TT", "TN", "TR", "TM", "TV", "UG", "UA", "AE", "GB", "US", "UY", "UZ", "VU", "VA", "VE", "VN", "YE", "ZM", "ZW",
+];
+
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const COUNTRIES = COUNTRY_CODES.map((code) => {
+  const country = regionNames.of(code) ?? code;
+  return { value: country, label: country };
+}).sort((a, b) => a.label.localeCompare(b.label));
+
 export default async function AccountPage() {
   const user = await getUser();
   if (!user) redirect("/login");
@@ -146,7 +156,7 @@ export default async function AccountPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="City" name="city" defaultValue={profile?.city ?? ""} />
             <Field label="State" name="state" defaultValue={profile?.state ?? ""} />
-            <Field label="Country" name="country" defaultValue={profile?.country ?? "Nigeria"} />
+            <Select label="Country" name="country" options={COUNTRIES} defaultValue={profile?.country ?? "Nigeria"} placeholder="Choose…" />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <Select label="Employment" name="employment" options={EMPLOYMENT} defaultValue={profile?.employment ?? ""} placeholder="Choose…" />

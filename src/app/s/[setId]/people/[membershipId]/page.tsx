@@ -68,48 +68,59 @@ export default async function MemberProfilePage({
 
   const isSelf = m.user_id === ws.userId;
   const showStudentId = can(ws, "members.view_student_id") || isSelf;
+  const membershipDetails = [dept?.name, house?.name, hostel?.name].filter(Boolean);
 
   return (
     <div className="mx-auto max-w-[62rem]">
       <Link href={`/s/${setId}/people`} className="btn btn-quiet btn-sm mb-4">← Back to people</Link>
 
       <div className="card overflow-hidden p-0">
-        <div className="relative h-28 bg-gradient-to-br from-[var(--color-brand-deep)] to-[var(--color-brand)]">
+        <div className="relative h-32 overflow-hidden bg-gradient-to-br from-[var(--color-brand-deep)] to-[var(--color-brand)] sm:h-36">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         </div>
-        <div className="px-6 pb-6 sm:px-8">
-          <div className="-mt-11 flex flex-wrap items-end gap-4">
-            <div className="rounded-full ring-4 ring-[var(--color-surface)]">
-              <Avatar name={p?.display_name} src={p?.avatar_url} size={88} />
+        <div className="relative px-6 pb-6 sm:px-8">
+          <div className="-mt-10">
+            <div className="inline-flex rounded-full bg-[var(--color-surface)] p-1">
+              <Avatar name={p?.display_name} src={p?.avatar_url} size={80} />
             </div>
-            <div className="min-w-0 flex-1 pb-1">
-              <h1 className="t-h2 truncate">{p?.display_name ?? "Member"}</h1>
-              <p className="mt-0.5 text-[var(--color-muted)]">
+          </div>
+
+          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="t-h2 leading-tight">{p?.display_name ?? "Member"}</h1>
+              <p className="mt-1 text-[var(--color-muted)]">
                 {m.nickname ? `“${m.nickname}” · ` : ""}
                 {p?.profession ?? m.course ?? "Member of this set"}
               </p>
             </div>
             {isSelf ? (
-              <Link href={`/s/${setId}/settings/profile`} className="btn btn-ghost btn-sm">Edit my set profile</Link>
+              <Link href={`/s/${setId}/settings/profile`} className="btn btn-ghost btn-sm shrink-0">Edit my set profile</Link>
             ) : null}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-1.5">
-            {dept ? <Badge tone="plum" icon="department">{dept.name}</Badge> : null}
-            {house ? <Badge icon="home">{house.name}</Badge> : null}
-            {hostel ? <Badge icon="home">{hostel.name}</Badge> : null}
-            {m.was_prefect ? (
-              <Badge tone="caution" icon="trophy">
-                {m.prefect_position ?? "Prefect"}{m.prefect_year ? ` · ${m.prefect_year}` : ""}
-              </Badge>
-            ) : null}
-            {m.is_founder ? <Badge tone="brand">Founding member</Badge> : null}
-            {m.verification === "verified" ? <Badge tone="positive" icon="check">Verified</Badge> : null}
-            {(roles ?? []).map((r) => {
-              const role = first(r.set_roles) as { name: string; color: string | null; department_id: string | null } | null;
-              if (!role || role.name === "Member" || role.name === "Department Member") return null;
-              return <Badge key={r.id} tone="brand" icon="shield">{role.name}</Badge>;
-            })}
+          {membershipDetails.length ? (
+            <div className="mt-6">
+              <p className="t-eyebrow mb-1.5">Membership</p>
+              <p className="text-sm font-medium text-[var(--color-ink-2)]">{membershipDetails.join(" · ")}</p>
+            </div>
+          ) : null}
+
+          <div className="mt-6">
+            <p className="t-eyebrow mb-2">Status</p>
+            <div className="flex flex-wrap gap-1.5">
+              {m.was_prefect ? (
+                <Badge tone="caution" icon="trophy">
+                  {m.prefect_position ?? "Prefect"}{m.prefect_year ? ` · ${m.prefect_year}` : ""}
+                </Badge>
+              ) : null}
+              {m.is_founder ? <Badge tone="brand">Founding member</Badge> : null}
+              {m.verification === "verified" ? <Badge tone="positive" icon="check">Verified</Badge> : null}
+              {(roles ?? []).map((r) => {
+                const role = first(r.set_roles) as { name: string; color: string | null; department_id: string | null } | null;
+                if (!role || role.name === "Member" || role.name === "Department Member") return null;
+                return <Badge key={r.id} tone="brand" icon="shield">{role.name}</Badge>;
+              })}
+            </div>
           </div>
 
           {p?.bio ? (

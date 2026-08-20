@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCommunities, getUser } from "@/lib/workspace";
-import { Avatar, Badge, Card, PageHeader, SectionHeader } from "@/components/ui";
+import { Badge, Card, PageHeader, SectionHeader } from "@/components/ui";
 import { Field, Select, SubmitButton, TextArea } from "@/components/forms";
 import { IconLock } from "@/components/icons";
+import { ProfilePhotoUploader } from "@/components/account/profile-photo-uploader";
 
 export const metadata = { title: "My account" };
 export const dynamic = "force-dynamic";
@@ -26,6 +27,16 @@ const PRIVACY = [
   { value: "admins", label: "Administrators only" },
   { value: "private", label: "Only me" },
 ];
+
+const COUNTRY_CODES = [
+  "AF", "AL", "DZ", "AD", "AO", "AG", "AR", "AM", "AU", "AT", "AZ", "BS", "BH", "BD", "BB", "BY", "BE", "BZ", "BJ", "BT", "BO", "BA", "BW", "BR", "BN", "BG", "BF", "BI", "CV", "KH", "CM", "CA", "CF", "TD", "CL", "CN", "CO", "KM", "CG", "CD", "CR", "CI", "HR", "CU", "CY", "CZ", "DK", "DJ", "DM", "DO", "EC", "EG", "SV", "GQ", "ER", "EE", "SZ", "ET", "FJ", "FI", "FR", "GA", "GM", "GE", "DE", "GH", "GR", "GD", "GT", "GN", "GW", "GY", "HT", "HN", "HU", "IS", "IN", "ID", "IR", "IQ", "IE", "IL", "IT", "JM", "JP", "JO", "KZ", "KE", "KI", "KW", "KG", "LA", "LV", "LB", "LS", "LR", "LY", "LI", "LT", "LU", "MG", "MW", "MY", "MV", "ML", "MT", "MH", "MR", "MU", "MX", "FM", "MD", "MC", "MN", "ME", "MA", "MZ", "MM", "NA", "NR", "NP", "NL", "NZ", "NI", "NE", "NG", "KP", "MK", "NO", "OM", "PK", "PW", "PS", "PA", "PG", "PY", "PE", "PH", "PL", "PT", "QA", "RO", "RU", "RW", "KN", "LC", "VC", "WS", "SM", "ST", "SA", "SN", "RS", "SC", "SL", "SG", "SK", "SI", "SB", "SO", "ZA", "KR", "SS", "ES", "LK", "SD", "SR", "SE", "CH", "SY", "TW", "TJ", "TZ", "TH", "TL", "TG", "TO", "TT", "TN", "TR", "TM", "TV", "UG", "UA", "AE", "GB", "US", "UY", "UZ", "VU", "VA", "VE", "VN", "YE", "ZM", "ZW",
+];
+
+const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+const COUNTRIES = COUNTRY_CODES.map((code) => {
+  const country = regionNames.of(code) ?? code;
+  return { value: country, label: country };
+}).sort((a, b) => a.label.localeCompare(b.label));
 
 export default async function AccountPage() {
   const user = await getUser();
@@ -88,6 +99,8 @@ export default async function AccountPage() {
     redirect("/account?privacy=1");
   }
 
+  const communityLabel = `${communities.length} ${communities.length === 1 ? "Community" : "Communities"}`;
+
   return (
     <div>
       <PageHeader
@@ -97,14 +110,22 @@ export default async function AccountPage() {
       />
 
       <Card className="mb-6">
-        <div className="flex flex-wrap items-center gap-4">
-          <Avatar name={profile?.display_name} src={profile?.avatar_url} size={64} />
-          <div className="min-w-0 flex-1">
-            <p className="font-display text-lg font-semibold">{profile?.display_name ?? "Your name"}</p>
-            <p className="text-sm text-[var(--color-muted)]">{user.email}</p>
+        <div className="space-y-6">
+          <div>
+            <h2 className="t-h3">Profile</h2>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">Manage your personal information and profile photo.</p>
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            <Badge icon="school">{communities.length} communities</Badge>
+
+          <div className="min-w-0">
+            <p className="font-display text-lg font-semibold leading-tight">{profile?.display_name ?? "Your name"}</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{user.email}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Badge>{communityLabel}</Badge>
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--color-line)] pt-5">
+            <ProfilePhotoUploader userId={user.id} name={profile?.display_name} currentUrl={profile?.avatar_url} />
           </div>
         </div>
       </Card>
@@ -124,7 +145,7 @@ export default async function AccountPage() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="City" name="city" defaultValue={profile?.city ?? ""} />
             <Field label="State" name="state" defaultValue={profile?.state ?? ""} />
-            <Field label="Country" name="country" defaultValue={profile?.country ?? "Nigeria"} />
+            <Select label="Country" name="country" options={COUNTRIES} defaultValue={profile?.country ?? "Nigeria"} placeholder="Choose…" />
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <Select label="Employment" name="employment" options={EMPLOYMENT} defaultValue={profile?.employment ?? ""} placeholder="Choose…" />

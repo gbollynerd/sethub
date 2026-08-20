@@ -33,7 +33,7 @@ export default async function AdminMembersPage({
     .from("set_memberships")
     .select(
       `id, user_id, status, nickname, course, class_arm, student_id, joined_at, verification, is_founder,
-       department_id, profiles ( display_name, avatar_url, email, phone ), set_departments ( name )`,
+       department_id, profiles!left ( display_name, avatar_url, email, phone ), set_departments!left ( name )`,
     )
     .eq("set_id", setId)
     .order("joined_at", { ascending: false })

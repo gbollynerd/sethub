@@ -22,8 +22,8 @@ export default async function DepartmentMembersPage({
     .from("department_memberships")
     .select(
       `id, role, status, is_primary, joined_at,
-       set_memberships ( id, nickname, course, class_arm, was_prefect,
-                         profiles ( display_name, avatar_url, profession ) )`,
+       set_memberships!left ( id, nickname, course, class_arm, was_prefect,
+                         profiles!left ( display_name, avatar_url, profession ) )`,
     )
     .eq("department_id", departmentId)
     .order("role")

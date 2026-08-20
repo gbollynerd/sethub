@@ -100,6 +100,10 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
       if (updateError) throw updateError;
 
       setUploadedUrl(publicUrl);
+      const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+      if (updateError) throw updateError;
+
       setStatus("Profile photo updated.");
       setPreviewUrl(null);
       imageRef.current = null;
@@ -128,6 +132,14 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
           </button>
           <p className="mt-1 text-xs text-[var(--color-subtle)]">JPG, PNG or WebP · Max 5 MB</p>
           <p className="text-xs text-[var(--color-subtle)]">Your photo will be cropped to a square.</p>
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar name={name} src={previewUrl ?? currentUrl} size={80} />
+        <div>
+          <input ref={fileInputRef} className="sr-only" type="file" accept="image/*" onChange={(e) => selectFile(e.target.files?.[0])} />
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()}>
+            Choose photo
+          </button>
+          <p className="mt-1 text-xs text-[var(--color-subtle)]">Crop and zoom before saving. Uploaded photos are stored as square WebP images.</p>
         </div>
       </div>
 

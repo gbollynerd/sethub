@@ -116,7 +116,18 @@ export default async function AccountPage() {
 
           <div className="border-t border-[var(--color-line)] pt-5">
             <ProfilePhotoUploader userId={user.id} name={profile?.display_name} currentUrl={profile?.avatar_url} />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] lg:items-start">
+          <div className="flex flex-wrap items-center gap-4">
+            <Avatar name={profile?.display_name} src={profile?.avatar_url} size={64} />
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-lg font-semibold">{profile?.display_name ?? "Your name"}</p>
+              <p className="text-sm text-[var(--color-muted)]">{user.email}</p>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              <Badge icon="school">{communities.length} communities</Badge>
+            </div>
           </div>
+          <ProfilePhotoUploader userId={user.id} name={profile?.display_name} currentUrl={profile?.avatar_url} />
         </div>
       </Card>
 

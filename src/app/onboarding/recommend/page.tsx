@@ -107,3 +107,6 @@ export default async function RecommendPage() {
     </div>
   );
 }
+
+// Personalised to the signed-in user — never prerender at build time.
+export const dynamic = "force-dynamic";

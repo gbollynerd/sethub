@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCommunities, getUser } from "@/lib/workspace";
-import { Avatar, Badge, Card, PageHeader, SectionHeader } from "@/components/ui";
+import { Badge, Card, PageHeader, SectionHeader } from "@/components/ui";
 import { Field, Select, SubmitButton, TextArea } from "@/components/forms";
 import { IconLock } from "@/components/icons";
 import { ProfilePhotoUploader } from "@/components/account/profile-photo-uploader";
@@ -89,6 +89,8 @@ export default async function AccountPage() {
     redirect("/account?privacy=1");
   }
 
+  const communityLabel = `${communities.length} ${communities.length === 1 ? "Community" : "Communities"}`;
+
   return (
     <div>
       <PageHeader
@@ -98,6 +100,22 @@ export default async function AccountPage() {
       />
 
       <Card className="mb-6">
+        <div className="space-y-6">
+          <div>
+            <h2 className="t-h3">Profile</h2>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">Manage your personal information and profile photo.</p>
+          </div>
+
+          <div className="min-w-0">
+            <p className="font-display text-lg font-semibold leading-tight">{profile?.display_name ?? "Your name"}</p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{user.email}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Badge>{communityLabel}</Badge>
+            </div>
+          </div>
+
+          <div className="border-t border-[var(--color-line)] pt-5">
+            <ProfilePhotoUploader userId={user.id} name={profile?.display_name} currentUrl={profile?.avatar_url} />
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,26rem)] lg:items-start">
           <div className="flex flex-wrap items-center gap-4">
             <Avatar name={profile?.display_name} src={profile?.avatar_url} size={64} />

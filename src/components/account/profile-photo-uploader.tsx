@@ -20,6 +20,7 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [dragStart, setDragStart] = useState<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -34,6 +35,7 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
       setOffset({ x: 0, y: 0 });
       setZoom(1);
     };
+    image.onerror = () => setStatus("Could not preview that image. Please choose another photo.");
     image.src = previewUrl;
   }, [previewUrl]);
 
@@ -49,6 +51,7 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
     }
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setStatus(null);
+    setUploadedUrl(null);
     setPreviewUrl(URL.createObjectURL(file));
   }
 
@@ -92,6 +95,11 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = data.publicUrl;
+      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
+      if (updateError) throw updateError;
+
+      setUploadedUrl(publicUrl);
       const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
       const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", userId);
       if (updateError) throw updateError;
@@ -111,6 +119,19 @@ export function ProfilePhotoUploader({ userId, name, currentUrl }: Props) {
 
   return (
     <div className="space-y-4">
+      <div>
+        <p className="font-display text-base font-semibold text-[var(--color-ink)]">Profile photo</p>
+        <p className="mt-1 text-sm text-[var(--color-muted)]">Update your photo so other members can recognize you.</p>
+      </div>
+      <div className="flex flex-wrap items-center gap-4">
+        <Avatar name={name} src={previewUrl ?? uploadedUrl ?? currentUrl} size={80} />
+        <div>
+          <input ref={fileInputRef} className="sr-only" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => selectFile(e.target.files?.[0])} />
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => fileInputRef.current?.click()}>
+            Choose photo
+          </button>
+          <p className="mt-1 text-xs text-[var(--color-subtle)]">JPG, PNG or WebP · Max 5 MB</p>
+          <p className="text-xs text-[var(--color-subtle)]">Your photo will be cropped to a square.</p>
       <div className="flex flex-wrap items-center gap-4">
         <Avatar name={name} src={previewUrl ?? currentUrl} size={80} />
         <div>

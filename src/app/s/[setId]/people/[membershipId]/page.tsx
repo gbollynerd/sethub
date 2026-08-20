@@ -74,10 +74,10 @@ export default async function MemberProfilePage({
       <Link href={`/s/${setId}/people`} className="btn btn-quiet btn-sm mb-4">← Back to people</Link>
 
       <div className="card overflow-hidden p-0">
-        <div className="relative h-28 bg-gradient-to-br from-[var(--color-brand-deep)] to-[var(--color-brand)]">
+        <div className="relative h-28 overflow-hidden bg-gradient-to-br from-[var(--color-brand-deep)] to-[var(--color-brand)]">
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
         </div>
-        <div className="px-6 pb-6 sm:px-8">
+        <div className="relative z-10 px-6 pb-6 sm:px-8">
           <div className="-mt-11 flex flex-wrap items-end gap-4">
             <div className="rounded-full ring-4 ring-[var(--color-surface)]">
               <Avatar name={p?.display_name} src={p?.avatar_url} size={88} />

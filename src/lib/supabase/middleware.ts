@@ -11,6 +11,11 @@ const PUBLIC = [
   "/auth",
   "/invite",
   "/legal",
+  "/why-sethub",
+  "/who-is-sethub-for",
+  "/about",
+  "/faqs",
+  "/talk-to-sales",
 ];
 
 export async function updateSession(request: NextRequest) {

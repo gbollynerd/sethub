@@ -18,6 +18,11 @@ const PUBLIC = [
   "/talk-to-sales",
 ];
 
+/** Routes whose top-level shell requires an authenticated member. Keeping this
+ * explicit lets Next.js render its not-found page for unknown URLs instead of
+ * treating every typo as a request to sign in. */
+const PROTECTED = ["/app", "/account", "/s"];
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -47,7 +52,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC.some((p) => path === p || path.startsWith(`${p}/`));
 
-  if (!user && !isPublic) {
+  const isProtected = PROTECTED.some((p) => path === p || path.startsWith(`${p}/`));
+
+  if (!user && isProtected && !isPublic) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/login";
     redirect.searchParams.set("next", path);

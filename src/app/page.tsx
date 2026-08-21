@@ -465,6 +465,14 @@ function FinancePreview() {
     { m: "Apr", i: 62, e: 30 }, { m: "May", i: 74, e: 41 }, { m: "Jun", i: 55, e: 48 },
     { m: "Jul", i: 92, e: 36 }, { m: "Aug", i: 81, e: 52 }, { m: "Sep", i: 100, e: 44 },
   ];
+  const chartWidth = 360;
+  const chartHeight = 150;
+  const chartPadding = 12;
+  const points = months.map((month, index) => {
+    const x = chartPadding + (index * (chartWidth - chartPadding * 2)) / (months.length - 1);
+    const y = chartPadding + ((100 - month.i) * (chartHeight - chartPadding * 2)) / 100;
+    return `${x},${y}`;
+  }).join(" ");
   return (
     <div className="card p-6 shadow-[var(--shadow-lift)]">
       <div className="flex items-start justify-between">
@@ -475,10 +483,50 @@ function FinancePreview() {
         <span className="chip chip-positive">+18% this quarter</span>
       </div>
 
-      <div className="mt-7 flex items-end gap-3" style={{ height: 150 }}>
+      <div className="relative mt-7 flex items-end gap-3" style={{ height: 150 }}>
+        <svg
+          className="pointer-events-none absolute inset-0 h-[150px] w-full overflow-visible"
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id="balance-trend-fill" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-brand)" stopOpacity="0.22" />
+              <stop offset="100%" stopColor="var(--color-brand)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {[25, 50, 75].map((y) => (
+            <line
+              key={y}
+              x1="0"
+              x2={chartWidth}
+              y1={(chartHeight * y) / 100}
+              y2={(chartHeight * y) / 100}
+              stroke="var(--color-line)"
+              strokeDasharray="3 5"
+            />
+          ))}
+          <polygon
+            points={`${chartPadding},${chartHeight - chartPadding} ${points} ${chartWidth - chartPadding},${chartHeight - chartPadding}`}
+            fill="url(#balance-trend-fill)"
+          />
+          <polyline
+            points={points}
+            fill="none"
+            stroke="var(--color-brand-deep)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {points.split(" ").map((point) => {
+            const [cx, cy] = point.split(",");
+            return <circle key={point} cx={cx} cy={cy} r="3.75" fill="var(--color-surface)" stroke="var(--color-brand-deep)" strokeWidth="2.5" />;
+          })}
+        </svg>
         {months.map((m) => (
-          <div key={m.m} className="flex flex-1 flex-col items-center gap-1.5">
-            <div className="flex h-full w-full items-end justify-center gap-1">
+          <div key={m.m} className="relative z-10 flex flex-1 flex-col items-center gap-1.5">
+            <div className="flex h-full w-full items-end justify-center gap-1 opacity-80">
               <div className="w-1/2 max-w-[22px] rounded-t-md bg-[var(--color-brand)]" style={{ height: `${m.i}%` }} />
               <div className="w-1/2 max-w-[22px] rounded-t-md bg-[var(--color-plum)] opacity-70" style={{ height: `${m.e}%` }} />
             </div>

@@ -49,6 +49,106 @@ interface Props {
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "🙏", "🔥"];
 
+// Curated, dependency-free emoji set grouped by category — avoids pulling in
+// a picker library (and its assets) just to let people react/type emoji.
+const EMOJI_GROUPS: Array<{ label: string; emojis: string[] }> = [
+  {
+    label: "Smileys",
+    emojis: [
+      "😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "😘",
+      "😋", "😛", "🤪", "😜", "🤔", "🤨", "😐", "🙄", "😏", "😮", "😴", "😌", "😒", "🙁", "😢", "😭",
+      "😤", "😠", "🤯", "😳", "🥵", "🥶", "😱", "🤗", "🤫", "😬",
+    ],
+  },
+  {
+    label: "Gestures & people",
+    emojis: [
+      "👍", "👎", "👌", "🤞", "✌️", "🤟", "🤘", "👊", "✊", "👏", "🙌", "👐", "🙏", "💪", "👋", "🤙",
+      "🤝", "✋", "👆", "👇", "👈", "👉", "🫶",
+    ],
+  },
+  {
+    label: "Hearts & symbols",
+    emojis: [
+      "❤️", "🧡", "💛", "💚", "💙", "💜", "🖤", "🤍", "💔", "💕", "💯", "✨", "🔥", "⭐", "💫", "💥",
+      "🎉", "🎊", "🏆", "🥇", "✅", "❌", "❓", "❗", "⚠️",
+    ],
+  },
+  {
+    label: "Animals & nature",
+    emojis: [
+      "🐶", "🐱", "🐭", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯", "🦁", "🐮", "🐸", "🙈", "🙉", "🙊", "🐧",
+      "🦄", "🐝", "🦋", "🌸", "🌻", "🌈", "☀️", "🌙", "⭐", "☁️", "⚡", "❄️",
+    ],
+  },
+  {
+    label: "Food & drink",
+    emojis: [
+      "🍎", "🍊", "🍋", "🍌", "🍉", "🍇", "🍓", "🍑", "🍍", "🍅", "🥑", "🍕", "🍔", "🍟", "🌭", "🌮",
+      "🍣", "🍜", "🍿", "🍩", "🍪", "🎂", "🍫", "☕", "🍵", "🥤", "🍺", "🍷",
+    ],
+  },
+  {
+    label: "Activities & objects",
+    emojis: [
+      "⚽", "🏀", "🏈", "⚾", "🎾", "🏐", "🎱", "🏓", "🎮", "🎲", "🎧", "🎤", "🎸", "📚", "📝", "💻",
+      "📱", "📷", "🎬", "🎨", "✏️", "📌", "🔑", "💡", "🔒", "🎁", "💰", "📅",
+    ],
+  },
+];
+
+function EmojiPicker({
+  onPick,
+  onClose,
+  align = "left",
+}: {
+  onPick: (emoji: string) => void;
+  onClose: () => void;
+  align?: "left" | "right";
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Same click-outside-to-close pattern used for the notification bell and
+  // user menu popovers in the topbar.
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className={`scroll-slim absolute z-30 max-h-64 w-64 overflow-y-auto rounded-[var(--radius-md)] border border-[var(--color-line)] bg-[var(--color-surface)] p-2.5 shadow-[var(--shadow-card)] ${
+        align === "right" ? "right-0" : "left-0"
+      }`}
+    >
+      {EMOJI_GROUPS.map((group) => (
+        <div key={group.label} className="mb-2 last:mb-0">
+          <p className="mb-1 px-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-[var(--color-subtle)]">
+            {group.label}
+          </p>
+          <div className="flex flex-wrap gap-0.5">
+            {group.emojis.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => onPick(e)}
+                className="grid h-8 w-8 place-items-center rounded-[var(--radius-sm)] text-lg transition hover:bg-[var(--color-surface-2)]"
+                aria-label={`Insert ${e}`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ChannelView({
   setId, channel, membershipId, userId, canPost, canModerate, canManageChannel, initialMessages, members, files,
 }: Props) {
@@ -80,8 +180,11 @@ export function ChannelView({
   const [sending, setSending] = useState(false);
   const [panel, setPanel] = useState<"none" | "members" | "files" | "pinned">("none");
   const [error, setError] = useState<string | null>(null);
+  const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
+  const [showComposerEmoji, setShowComposerEmoji] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const nameById = useMemo(
     () => new Map(members.map((m) => [m.id, m])),
@@ -185,6 +288,25 @@ export function ChannelView({
   const react = async (messageId: string, emoji: string) => {
     await supabase.from("message_reactions").insert({
       message_id: messageId, membership_id: membershipId, emoji,
+    });
+  };
+
+  // Inserts an emoji at the composer's current cursor position (falling back
+  // to appending it) rather than always tacking it onto the end of the draft.
+  const insertEmoji = (emoji: string) => {
+    const el = textareaRef.current;
+    if (!el) {
+      setDraft((d) => d + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? draft.length;
+    const end = el.selectionEnd ?? draft.length;
+    const next = draft.slice(0, start) + emoji + draft.slice(end);
+    setDraft(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + emoji.length;
+      el.setSelectionRange(pos, pos);
     });
   };
 
@@ -346,6 +468,13 @@ export function ChannelView({
                             {e}
                           </button>
                         ))}
+                        <button
+                          onClick={() => setReactionPickerFor(reactionPickerFor === m.id ? null : m.id)}
+                          className="rounded-full px-1.5 py-0.5 text-sm text-[var(--color-subtle)] transition hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
+                          aria-label="More reactions"
+                        >
+                          +
+                        </button>
                         {canModerate ? (
                           <button
                             onClick={() => togglePin(m)}
@@ -365,6 +494,18 @@ export function ChannelView({
                           </button>
                         ) : null}
                       </div>
+                      {reactionPickerFor === m.id ? (
+                        <div className="absolute right-2 top-6 z-30">
+                          <EmojiPicker
+                            align="right"
+                            onPick={(e) => {
+                              react(m.id, e);
+                              setReactionPickerFor(null);
+                            }}
+                            onClose={() => setReactionPickerFor(null)}
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   );
                 })}
@@ -375,13 +516,22 @@ export function ChannelView({
         </div>
 
         {/* Composer */}
-        <div className="border-t border-[var(--color-line)] px-4 py-3.5 sm:px-6">
+        <div className="relative border-t border-[var(--color-line)] px-4 py-3.5 sm:px-6">
           {error ? (
             <p className="mb-2 text-xs text-[var(--color-critical)]">{error}</p>
           ) : null}
           {canPost ? (
             <div className="flex items-end gap-2 rounded-[var(--radius-lg)] border border-[var(--color-line-strong)] bg-[var(--color-surface)] p-2 focus-within:border-[var(--color-brand)] focus-within:shadow-[0_0_0_4px_rgba(8,152,160,0.11)]">
+              <button
+                type="button"
+                onClick={() => setShowComposerEmoji((v) => !v)}
+                className="btn btn-quiet btn-icon shrink-0 text-lg"
+                aria-label="Insert emoji"
+              >
+                🙂
+              </button>
               <textarea
+                ref={textareaRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
@@ -410,6 +560,11 @@ export function ChannelView({
                 : "You do not have permission to post here."}
             </p>
           )}
+          {showComposerEmoji ? (
+            <div className="absolute bottom-full left-4 z-30 mb-2">
+              <EmojiPicker onPick={insertEmoji} onClose={() => setShowComposerEmoji(false)} />
+            </div>
+          ) : null}
           <p className="mt-1.5 text-center text-[0.68rem] text-[var(--color-subtle)]">
             Enter to send · Shift + Enter for a new line
           </p>
@@ -473,9 +628,8 @@ export function ChannelView({
                 Pin the decisions worth keeping and they will show up here.
               </p>
             )
-          }
-        </div>
-      </aside>
+          </div>
+        </aside>
       ) : null}
     </div>
   );

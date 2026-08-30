@@ -5,6 +5,7 @@ import { Avatar, Badge, Card, EmptyState, PageHeader, SectionHeader } from "@/co
 import { IconTrophy } from "@/components/icons";
 import { first } from "@/lib/rows";
 import { formatDate } from "@/lib/format";
+import { ExcoManager } from "@/components/admin/exco-manager";
 
 export const metadata = { title: "EXCO" };
 export const dynamic = "force-dynamic";
@@ -14,16 +15,28 @@ export default async function ExcoPage({ params }: { params: Promise<{ setId: st
   const ws = await getWorkspace(setId);
   const supabase = await createClient();
 
-  const [{ data: terms }, { data: appointments }, { data: positions }] = await Promise.all([
+  const canManageTerms = can(ws, "exco.manage_terms");
+  const canAssign = can(ws, "exco.assign");
+
+  const [{ data: terms }, { data: appointments }, { data: positions }, { data: memberRows }] = await Promise.all([
     supabase.from("exco_terms").select("id, name, starts_on, ends_on, is_current").eq("set_id", setId).order("starts_on", { ascending: false }),
     supabase
       .from("exco_appointments")
       .select(
-        "id, status, term_id, created_at, exco_positions ( name, rank ), set_memberships ( id, nickname, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )",
+        "id, status, term_id, position_id, created_at, exco_positions ( name, rank ), set_memberships ( id, nickname, profiles!set_memberships_user_id_fkey ( display_name, avatar_url ) )",
       )
+      .neq("status", "removed")
       .order("created_at", { ascending: false })
       .limit(200),
     supabase.from("exco_positions").select("id, name, rank, seats").eq("set_id", setId).order("rank"),
+    canAssign
+      ? supabase
+          .from("set_memberships")
+          .select("id, profiles!set_memberships_user_id_fkey ( display_name, avatar_url )")
+          .eq("set_id", setId)
+          .eq("status", "active")
+          .limit(400)
+      : Promise.resolve({ data: [] as Array<{ id: string; profiles: unknown }> }),
   ]);
 
   const current = (terms ?? []).find((t) => t.is_current);
@@ -44,6 +57,7 @@ export default async function ExcoPage({ params }: { params: Promise<{ setId: st
         return {
           id: a.id as string,
           status: a.status as string,
+          positionId: a.position_id as string,
           position: pos?.name ?? "Position",
           rank: pos?.rank ?? 999,
           membershipId: sm?.id ?? "",
@@ -54,6 +68,12 @@ export default async function ExcoPage({ params }: { params: Promise<{ setId: st
       .sort((x, y) => x.rank - y.rank);
 
   const currentExco = render(byTerm.get(current?.id ?? "") ?? []);
+  const memberOptions = (memberRows ?? []).map((m) => {
+    const p = first(m.profiles as { display_name: string | null; avatar_url: string | null }) as
+      | { display_name: string | null; avatar_url: string | null }
+      | null;
+    return { id: m.id as string, name: p?.display_name ?? "Member", avatar: p?.avatar_url ?? null };
+  });
 
   return (
     <div className="mx-auto max-w-[76rem]">
@@ -62,7 +82,7 @@ export default async function ExcoPage({ params }: { params: Promise<{ setId: st
         title="Executive committee"
         description="Who holds office, who held it before, and which positions are still vacant. EXCO office and system permissions are deliberately separate — see Roles."
         action={
-          can(ws, "exco.assign") ? (
+          canAssign ? (
             <Link href={`/s/${setId}/admin/roles`} className="btn btn-ghost btn-sm">Manage permissions</Link>
           ) : undefined
         }
@@ -154,6 +174,29 @@ export default async function ExcoPage({ params }: { params: Promise<{ setId: st
           )}
         </Card>
       </div>
+
+      <ExcoManager
+        setId={setId}
+        currentTerm={current ? { id: current.id, name: current.name, starts_on: current.starts_on, is_current: current.is_current } : null}
+        terms={(terms ?? []).map((t) => ({ id: t.id, name: t.name, starts_on: t.starts_on, is_current: t.is_current }))}
+        positions={(positions ?? []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          seats: p.seats,
+          filled: currentExco.filter((e) => e.positionId === p.id).length,
+        }))}
+        holders={currentExco.map((e) => ({
+          appointmentId: e.id,
+          positionId: e.positionId,
+          membershipId: e.membershipId,
+          name: e.name,
+          avatar: e.avatar,
+          status: e.status,
+        }))}
+        members={memberOptions}
+        canManageTerms={canManageTerms}
+        canAssign={canAssign}
+      />
     </div>
   );
 }

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Visiting /chat with no channel picked (e.g. clicking "Chat" in the sidebar)
 // used to 404, since only /chat/[channelId] and /chat/new had a page. Land the
-// viewer on the set's default channel instead â falling back to any other
+// viewer on the set's default channel instead — falling back to any other
 // visible channel, then to "create a channel" for admins, then to an empty
 // state for a brand-new set with nothing set up yet.
 export default async function ChatIndexPage({

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 // The dashboard's "open now" widget links straight to a single poll
 // (/community/polls/:pollId) but only the list page existed, so that link
-// 404'd. This gives each poll its own page â same PollCard used on the list,
+// 404'd. This gives each poll its own page — same PollCard used on the list,
 // so voting works exactly the same way here.
 export default async function PollPage({
   params,
@@ -60,7 +60,7 @@ export default async function PollPage({
 
   return (
     <div className="mx-auto max-w-[52rem]">
-      <Link href={`/s/${setId}/community/polls`} className="btn btn-quiet btn-sm mb-4">â All polls</Link>
+      <Link href={`/s/${setId}/community/polls`} className="btn btn-quiet btn-sm mb-4">← All polls</Link>
 
       <PageHeader
         eyebrow={ws.set.name}

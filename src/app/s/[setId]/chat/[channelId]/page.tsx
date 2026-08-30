@@ -94,6 +94,9 @@ export default async function ChannelPage({
   const canPost = channel.is_announcement
     ? can(ws, "announcements.create", channel.department_id as string | null)
     : true;
+  const canManageChannel =
+    can(ws, "channels.edit", channel.department_id as string | null) ||
+    can(ws, "channels.create", channel.department_id as string | null);
 
   return (
     <ChannelView
@@ -104,6 +107,7 @@ export default async function ChannelPage({
         topic: channel.topic as string | null,
         visibility: channel.visibility as string,
         is_announcement: channel.is_announcement as boolean,
+        is_default: channel.is_default as boolean,
         member_count: channel.member_count as number,
         department_name: departmentName,
       }}
@@ -111,6 +115,7 @@ export default async function ChannelPage({
       userId={ws.userId}
       canPost={canPost}
       canModerate={canModerate}
+      canManageChannel={canManageChannel}
       initialMessages={messages}
       members={members}
       files={(files ?? []) as Array<{ id: string; file_name: string; storage_path: string; created_at: string }>}

@@ -6,6 +6,7 @@ import { Avatar, Badge, EmptyState, PageHeader, SectionHeader } from "@/componen
 import { IconHash, IconLock, IconPlus } from "@/components/icons";
 import { slugify } from "@/lib/slug";
 import { first } from "@/lib/rows";
+import { DeleteGroupButton } from "@/components/community/delete-group-button";
 
 export const metadata = { title: "Groups & committees" };
 export const dynamic = "force-dynamic";
@@ -83,6 +84,9 @@ export default async function GroupsPage({ params }: { params: Promise<{ setId: 
           {groups.map((g) => {
             const role = myGroups.get(g.id);
             const dept = first(g.set_departments) as { name: string } | null;
+            const canDelete =
+              can(ws, "groups.create", g.department_id as string | null) ||
+              can(ws, "groups.manage", g.department_id as string | null);
             return (
               <article key={g.id} className="card flex flex-col p-5">
                 <div className="flex items-start gap-3">
@@ -114,6 +118,7 @@ export default async function GroupsPage({ params }: { params: Promise<{ setId: 
                     <IconHash size={14} /> Open channel
                   </Link>
                 ) : null}
+                {canDelete ? <DeleteGroupButton groupId={g.id} groupName={g.name} /> : null}
               </article>
             );
           })}

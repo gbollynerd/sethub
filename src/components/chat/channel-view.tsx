@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Avatar, Badge } from "@/components/ui";
 import { Spinner } from "@/components/forms";
+import { useRouter } from "next/navigation";
 import {
   IconHash, IconLock, IconMegaphone, IconPin, IconSend, IconUpload, IconClose, IconPeople,
 } from "@/components/icons";
@@ -32,6 +33,7 @@ interface Props {
     topic: string | null;
     visibility: string;
     is_announcement: boolean;
+    is_default: boolean;
     member_count: number;
     department_name: string | null;
   };
@@ -39,6 +41,7 @@ interface Props {
   userId: string;
   canPost: boolean;
   canModerate: boolean;
+  canManageChannel: boolean;
   initialMessages: Message[];
   members: Array<{ id: string; name: string; avatar: string | null }>;
   files: Array<{ id: string; file_name: string; storage_path: string; created_at: string }>;
@@ -47,9 +50,31 @@ interface Props {
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "🙏", "🔥"];
 
 export function ChannelView({
-  setId, channel, membershipId, userId, canPost, canModerate, initialMessages, members, files,
+  setId, channel, membershipId, userId, canPost, canModerate, canManageChannel, initialMessages, members, files,
 }: Props) {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
+  const [archiving, setArchiving] = useState(false);
+
+  // Channels are soft-deleted (archived_at set) rather than hard-deleted —
+  // every channel list and RLS policy already filters on archived_at is
+  // null, so archiving here is enough to make the channel disappear
+  // everywhere without touching its message history.
+  const archiveChannel = async () => {
+    if (!window.confirm(`Delete #${channel.name}? Members will lose access; messages are kept but hidden.`)) return;
+    setArchiving(true);
+    const { error } = await supabase
+      .from("channels")
+      .update({ archived_at: new Date().toISOString(), archived_by: userId })
+      .eq("id", channel.id);
+    if (error) {
+      window.alert(error.message);
+      setArchiving(false);
+      return;
+    }
+    router.push(`/s/${setId}/chat`);
+    router.refresh();
+  };
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -232,6 +257,16 @@ export function ChannelView({
             >
               <IconPeople size={17} />
             </button>
+            {canManageChannel && !channel.is_default ? (
+              <button
+                onClick={archiveChannel}
+                disabled={archiving}
+                className="btn btn-quiet btn-icon text-[var(--color-critical)] hover:bg-[var(--color-critical-soft)]"
+                aria-label="Delete channel"
+              >
+                <IconClose size={17} />
+              </button>
+            ) : null}
           </div>
         </header>
 
@@ -437,9 +472,10 @@ export function ChannelView({
               <p className="px-2 py-6 text-center text-sm text-[var(--color-subtle)]">
                 Pin the decisions worth keeping and they will show up here.
               </p>
-            )}
-          </div>
-        </aside>
+            )
+          }
+        </div>
+      </aside>
       ) : null}
     </div>
   );

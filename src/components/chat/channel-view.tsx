@@ -627,7 +627,7 @@ export function ChannelView({
               <p className="px-2 py-6 text-center text-sm text-[var(--color-subtle)]">
                 Pin the decisions worth keeping and they will show up here.
               </p>
-            )
+            )}
           </div>
         </aside>
       ) : null}

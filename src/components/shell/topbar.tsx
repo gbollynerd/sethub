@@ -58,7 +58,7 @@ export function TopBar({
         </div>
         <div className="ml-auto flex flex-1 items-center justify-end gap-2 sm:flex-none">
           <OmniSearch setId={setId} />
-          <NotificationBell />
+          <NotificationBell setId={setId} />
           <UserMenu name={userName} avatarUrl={avatarUrl} setId={setId} />
         </div>
       </div>
@@ -221,7 +221,7 @@ function OmniSearch({ setId }: { setId: string }) {
   );
 }
 
-function NotificationBell() {
+function NotificationBell({ setId }: { setId: string }) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const ref = useRef<HTMLDivElement>(null);
@@ -331,6 +331,13 @@ function NotificationBell() {
               ))
             )}
           </ul>
+          <Link
+            href={`/s/${setId}/notifications`}
+            onClick={() => setOpen(false)}
+            className="block border-t border-[var(--color-line)] px-4 py-2.5 text-center text-xs font-semibold text-[var(--color-brand-dark)] hover:bg-[var(--color-surface-2)]"
+          >
+            View all notifications
+          </Link>
         </div>
       ) : null}
     </div>

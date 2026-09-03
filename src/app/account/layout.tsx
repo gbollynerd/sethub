@@ -10,6 +10,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           <div className="flex gap-2">
             <Link href="/account" className="btn btn-quiet btn-sm">Profile</Link>
             <Link href="/account/business" className="btn btn-quiet btn-sm">Business</Link>
+            <Link href="/account/notifications" className="btn btn-quiet btn-sm">Notifications</Link>
             <Link href="/app" className="btn btn-ghost btn-sm">My communities</Link>
           </div>
         </div>

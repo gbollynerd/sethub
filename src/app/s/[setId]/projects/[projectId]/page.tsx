@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getWorkspace } from "@/lib/workspace";
+import { can, getWorkspace } from "@/lib/workspace";
 import { Badge, Card, Donut, EmptyState, PageHeader, Progress, SectionHeader, StatTile, Table, Td, Tr } from "@/components/ui";
 import { IconPin, IconProject, IconSchool, IconPeople } from "@/components/icons";
 import { first } from "@/lib/rows";
@@ -69,7 +69,16 @@ export default async function ProjectPage({
         eyebrow={`${ws.set.institution.name} · ${titleCase(project.category)}`}
         title={project.title}
         description={project.summary ?? undefined}
-        action={<Badge tone={project.status === "completed" ? "positive" : "brand"}>{titleCase(project.status)}</Badge>}
+        action={
+          <div className="flex items-center gap-2">
+            <Badge tone={project.status === "completed" ? "positive" : "brand"}>{titleCase(project.status)}</Badge>
+            {can(ws, "projects.manage") ? (
+              <Link href={`/s/${setId}/projects/${projectId}/edit`} className="btn btn-ghost btn-sm">
+                Edit project
+              </Link>
+            ) : null}
+          </div>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

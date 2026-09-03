@@ -254,8 +254,8 @@ export default async function ElectionPage({
 
       {canManage ? (
         <div className="mt-8 flex flex-wrap gap-2">
-          <Link href={`/s/${setId}/elections/${electionId}/manage`} className="btn btn-ghost btn-sm">
-            Manage election
+          <Link href={`/s/${setId}/elections/${electionId}/edit`} className="btn btn-ghost btn-sm">
+            Edit election
           </Link>
           <Link href={`/s/${setId}/elections/${electionId}/candidates`} className="btn btn-ghost btn-sm">
             Review candidates

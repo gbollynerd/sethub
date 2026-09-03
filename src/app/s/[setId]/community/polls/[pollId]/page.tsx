@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getWorkspace } from "@/lib/workspace";
+import { can, getWorkspace } from "@/lib/workspace";
 import { PageHeader } from "@/components/ui";
 import { PollCard } from "@/components/community/poll-card";
 
@@ -25,7 +25,7 @@ export default async function PollPage({
     supabase
       .from("polls")
       .select(
-        "id, question, description, kind, max_choices, is_anonymous, show_live_results, status, opens_at, closes_at, vote_count, department_id, poll_options ( id, label, description, vote_count, sort_order )",
+        "id, question, description, kind, max_choices, is_anonymous, show_live_results, status, opens_at, closes_at, vote_count, department_id, created_by, poll_options ( id, label, description, vote_count, sort_order )",
       )
       .eq("id", pollId)
       .eq("set_id", setId)
@@ -57,6 +57,7 @@ export default async function PollPage({
   };
 
   const closed = row.status !== "open" || (row.closesAt !== null && new Date(row.closesAt) < new Date());
+  const canManage = can(ws, "polls.create", poll.department_id as string | null) || poll.created_by === ws.userId;
 
   return (
     <div className="mx-auto max-w-[52rem]">
@@ -68,7 +69,7 @@ export default async function PollPage({
         description="Cast your vote, or see where everyone else landed."
       />
 
-      <PollCard poll={row} membershipId={ws.membershipId} readOnly={closed} />
+      <PollCard poll={row} membershipId={ws.membershipId} readOnly={closed} canManage={canManage} />
     </div>
   );
 }

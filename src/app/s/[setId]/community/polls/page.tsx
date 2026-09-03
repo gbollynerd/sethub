@@ -16,7 +16,7 @@ export default async function PollsPage({ params }: { params: Promise<{ setId: s
     supabase
       .from("polls")
       .select(
-        "id, question, description, kind, max_choices, is_anonymous, show_live_results, status, opens_at, closes_at, vote_count, department_id, poll_options ( id, label, description, vote_count, sort_order )",
+        "id, question, description, kind, max_choices, is_anonymous, show_live_results, status, opens_at, closes_at, vote_count, department_id, created_by, poll_options ( id, label, description, vote_count, sort_order )",
       )
       .eq("set_id", setId)
       .order("created_at", { ascending: false })
@@ -47,6 +47,7 @@ export default async function PollsPage({ params }: { params: Promise<{ setId: s
       .slice()
       .sort((a, b) => a.sort_order - b.sort_order),
     myChoices: voted.get(p.id as string) ?? [],
+    canManage: can(ws, "polls.create", p.department_id as string | null) || p.created_by === ws.userId,
   }));
 
   const open = rows.filter((p) => p.status === "open" && (!p.closesAt || new Date(p.closesAt) > new Date()));
@@ -73,7 +74,7 @@ export default async function PollsPage({ params }: { params: Promise<{ setId: s
         ) : (
           <div className="space-y-4">
             {open.map((p) => (
-              <PollCard key={p.id} poll={p} membershipId={ws.membershipId} />
+              <PollCard key={p.id} poll={p} membershipId={ws.membershipId} canManage={p.canManage} />
             ))}
           </div>
         )}
@@ -84,7 +85,7 @@ export default async function PollsPage({ params }: { params: Promise<{ setId: s
           <SectionHeader title="Closed" />
           <div className="space-y-4">
             {closed.map((p) => (
-              <PollCard key={p.id} poll={p} membershipId={ws.membershipId} readOnly />
+              <PollCard key={p.id} poll={p} membershipId={ws.membershipId} readOnly canManage={p.canManage} />
             ))}
           </div>
         </section>

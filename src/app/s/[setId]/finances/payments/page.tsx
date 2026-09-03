@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { can, getWorkspace } from "@/lib/workspace";
 import { Avatar, Badge, EmptyState, PageHeader, Table, Td, Tr } from "@/components/ui";
@@ -99,10 +100,13 @@ export default async function PaymentsPage({
           {rows.map((r) => (
             <Tr key={r.id}>
               <Td>
-                <span className="flex items-center gap-2.5">
+                <Link
+                  href={`/s/${setId}/finances/payments/${r.id}`}
+                  className="flex items-center gap-2.5 hover:underline"
+                >
                   <Avatar name={r.payer} src={r.avatar} size={30} />
                   <span className="truncate font-medium">{r.payer}</span>
-                </span>
+                </Link>
               </Td>
               <Td className="max-w-[12rem] truncate text-[var(--color-muted)]">
                 {r.due ?? r.note ?? "—"}
@@ -123,9 +127,12 @@ export default async function PaymentsPage({
                 </Badge>
               </Td>
               <Td className="text-right">
-                {canConfirm && r.status !== "confirmed" ? (
-                  <ConfirmPaymentButton paymentId={r.id} />
-                ) : null}
+                <span className="flex items-center justify-end gap-2">
+                  {canConfirm && r.status !== "confirmed" ? <ConfirmPaymentButton paymentId={r.id} /> : null}
+                  <Link href={`/s/${setId}/finances/payments/${r.id}`} className="btn btn-quiet btn-sm">
+                    View
+                  </Link>
+                </span>
               </Td>
             </Tr>
           ))}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge, EmptyState, Progress } from "@/components/ui";
 import { IconGlobe, IconMegaphone } from "@/components/icons";
 import { formatDate, formatTime, money, relativeTime } from "@/lib/format";
+import { SendDuesRemindersButton } from "@/components/finance/send-dues-reminders-button";
 
 /* Shared list renderers used by both set-level and department-level pages. */
 
@@ -205,9 +206,7 @@ export function DuesList({ setId, items, manage }: { setId: string; items: DuesI
                 <Link href={`/s/${setId}/finances/dues/${d.id}`} className="btn btn-ghost btn-sm">
                   View ledger
                 </Link>
-                <Link href={`/s/${setId}/finances/dues/${d.id}/remind`} className="btn btn-soft btn-sm">
-                  Send reminders
-                </Link>
+                <SendDuesRemindersButton duesId={d.id} />
               </div>
             ) : null}
           </li>
